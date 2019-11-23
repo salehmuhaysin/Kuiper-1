@@ -102,16 +102,15 @@ def Update(release_url , kuiper_backup , backup_exclude_dirs , backup_exclude_fi
         # ===================== Get last release link 
         write_log("Kuiper update: getting latest release from GitHub ["+release_url+"] " )
         
-        #request = urllib.urlopen(release_url)
-        #response = request.read()
-        #data = json.loads(response)
+        request = urllib.urlopen(release_url)
+        response = request.read()
+        data = json.loads(response)
         
         # Get download URL and download the 
-        #zip_url = data['zipball_url']
-        #write_log( "Start Downloading Kuiper " + data['tag_name'] )
-        #write_log( zip_url )
-        #zip_response = urllib.urlopen(zip_url)
-        #zip_url = 'https://api.github.com/repos/DFIRKuiper/Kuiper/zipball/v1.0.0'
+        zip_url = data['zipball_url']
+        write_log( "Start Downloading Kuiper " + data['tag_name'] )
+        write_log( zip_url )
+        zip_response = urllib.urlopen(zip_url)
         
         
         # ====================== backup
@@ -140,9 +139,7 @@ def Update(release_url , kuiper_backup , backup_exclude_dirs , backup_exclude_fi
         # ============== Download and Update Kuiper 
 
         # open the downloaded zip file from github
-        #zip_response = urllib.urlopen(zip_url)
-        #zip_update = zipfile.ZipFile(StringIO(zip_response).read()) 
-        zip_update = zipfile.ZipFile('../kuiper_new.zip') 
+        zip_update = zipfile.ZipFile(StringIO(zip_response).read()) 
         
         
         bUpdateSuccess = [True , "done"]
