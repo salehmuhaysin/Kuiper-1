@@ -13,7 +13,7 @@ y                       = yaml.load( open( 'configuration.yaml' , 'r' ) , Loader
 kuiper_update_log_file  = "Kuiper-update.log"
 kuiper_update_log       = open(kuiper_update_log_file , 'w')
 release_url             = y['Git']['git_url_release']
-kuiper_backup           = 'kuiper-backup.zip'
+kuiper_backup           = 'Kuiper-backup.zip'
 kuiper_update           = "Kuiper-update.zip"
 backup_dirs_exclude     = [
     os.path.join( y['Directories']['artifacts_upload'][0] ,y['Directories']['artifacts_upload'][1] ) , 
