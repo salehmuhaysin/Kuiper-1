@@ -43,7 +43,7 @@ MongoDB:
 Git:
   git_url_release : 'https://api.github.com/repos/DFIRKuiper/Kuiper/releases/latest'                                     # link for git to pull new updates if exists
   #git_url_version : 'https://raw.githubusercontent.com/DFIRKuiper/Kuiper/master/app/__version__'   # path to be checked to see if there is new update version 
-  k_version       : "v0.2.9"                                                                          # current version of kuiper
+  k_version       : "v0.5.9"                                                                          # current version of kuiper
 
 
 # ============ configuration of directories on the platform
