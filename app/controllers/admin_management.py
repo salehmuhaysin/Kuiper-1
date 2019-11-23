@@ -18,14 +18,14 @@ from app.database.elkdb import *
 from app.database.dbstuff import *
 
 
-
 # get configuration
 y = yaml.load( open( 'configuration.yaml' , 'r' ) , Loader=yaml.FullLoader )
 
 
 SIDEBAR = {
-    "sidebar"   : y['admin_sidebar'],
-    "open"      : app.config['SIDEBAR_OPEN']
+    "sidebar"           : y['admin_sidebar'],
+    "open"              : app.config['SIDEBAR_OPEN'],
+    'current_version'   : y['Git']['k_version']
 }
 
 
@@ -58,6 +58,25 @@ def list_zip_file(zip_path):
         zip_content.append(z.filename)
     return zip_content
 
+
+# this function run commands `git`
+def git(*args):
+    return subprocess.check_call(['git'] + list(args))
+
+
+# update kuiper from git
+def GitUpdate():
+
+    try:
+        up_status = subprocess.Popen('python Kuiper-update.py' , shell=True ,stdout=subprocess.PIPE).communicate()[0]
+        print up_status
+        if up_status.split(":")[0] == 'True':
+            return [True , up_status.split(":")[1]]
+        else:
+            return [False , up_status.split(":")[1]]
+    except Exception as e :
+        return [False , str(e)]
+    
 
 
 # =================================================
@@ -153,8 +172,35 @@ def admin_delete_case(casename):
 
 # =================== Config =======================
 
+# =================== Kuiper Update =======================
 
 
+# show the main config page
+@app.route('/admin/update')
+def config_update():
+    
+    # Gittle repo
+    print GitUpdate()
+    return json.dumps({'results' : 'true' , 'msg' : 'done'})
+
+@app.route('/admin/check_update')
+def config_check_update():
+
+    release_url = y['Git']['git_url_release']
+    print "Start getting latest release from Github: " + release_url
+    try:
+        request = urllib.urlopen(release_url)
+        response = request.read()
+        data = json.loads(response)
+        
+        if 200 == request.getcode():
+            return json.dumps({'results' : 'true' , 'msg' : data['tag_name']})
+        else:
+            return json.dumps({'results' : 'false' , 'msg' : 'Connection issue: ' + str(request.getcode()) + "<br />" + data['message']})
+    except Exception as e:
+        print 
+        return json.dumps({'results' : 'false' , 'msg' : "Network connection issue: <br />" + str(e)})
+    
 
 
 
@@ -346,5 +392,4 @@ def admin_rules():
         return render_template('admin/display_rules.html',SIDEBAR=SIDEBAR , all_rules=all_rules[1] , page_header="Rules")
     else:
         return render_template('admin/error_page.html',SIDEBAR=SIDEBAR , message=all_rules[1] , page_header="Cases")
-
 

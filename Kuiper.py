@@ -12,4 +12,4 @@ if __name__ == '__main__':
 	IP 		= y['Kuiper']['IP']
 	PORT 	= y['Kuiper']['PORT']
 	debug 	= y['Kuiper']['Debug']
-	app.run(IP,PORT, debug=debug)
+	app.run(IP, PORT, debug=debug)
