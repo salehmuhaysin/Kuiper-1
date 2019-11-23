@@ -6,7 +6,7 @@ import sys
 import os
 import yaml 
 import urllib
-
+import json
 
 # get configuration
 y                       = yaml.load( open( 'configuration.yaml' , 'r' ) , Loader=yaml.FullLoader )
@@ -14,14 +14,17 @@ kuiper_update_log_file  = "Kuiper-update.log"
 kuiper_update_log       = open(kuiper_update_log_file , 'w')
 release_url             = y['Git']['git_url_release']
 kuiper_backup           = 'kuiper-backup.zip'
-
+kuiper_update           = "Kuiper-update.zip"
 backup_dirs_exclude     = [
     os.path.join( y['Directories']['artifacts_upload'][0] ,y['Directories']['artifacts_upload'][1] ) , 
     os.path.join( y['Directories']['artifacts_upload_raw'][0] ,y['Directories']['artifacts_upload_raw'][1] )
     ]
 backup_files_exclude    = [
     kuiper_backup,
-    kuiper_update_log_file
+    kuiper_update_log_file,
+    'gunicorn.pid',
+    'Kuiper-install.log',
+    kuiper_update
 ]
 
 
@@ -99,7 +102,7 @@ def rollback(kuiper_backup, backup_exclude_dirs , backup_exclude_files):
             
 
 # kuiper update function
-def Update(release_url , kuiper_backup , backup_exclude_dirs , backup_exclude_files):
+def Update(kuiper_update , release_url , kuiper_backup , backup_exclude_dirs , backup_exclude_files):
     try:   
         # ===================== Get last release link 
         write_log("Kuiper update: getting latest release from GitHub ["+release_url+"] " )
@@ -111,8 +114,7 @@ def Update(release_url , kuiper_backup , backup_exclude_dirs , backup_exclude_fi
         # Get download URL and download the 
         zip_url = data['zipball_url']
         write_log( "Start Downloading Kuiper " + data['tag_name'] )
-        write_log( zip_url )
-        zip_response = urllib.urlopen(zip_url)
+        write_log( "GitHub URL zip file: " + zip_url )
         
         
         # ====================== backup
@@ -141,6 +143,7 @@ def Update(release_url , kuiper_backup , backup_exclude_dirs , backup_exclude_fi
         # ============== Download and Update Kuiper 
 
         # open the downloaded zip file from github
+        urllib.urlretrieve(zip_url, "Kuiper-update.zip")
         zip_update = zipfile.ZipFile(StringIO(zip_response).read()) 
         
         
@@ -186,7 +189,7 @@ def Update(release_url , kuiper_backup , backup_exclude_dirs , backup_exclude_fi
 
 
 # load the new update
-up = Update(release_url , kuiper_backup, backup_dirs_exclude , backup_files_exclude)
+up = Update(kuiper_update , release_url , kuiper_backup, backup_dirs_exclude , backup_files_exclude)
 if up[0]:
     print "True:Done Update"
 else:
