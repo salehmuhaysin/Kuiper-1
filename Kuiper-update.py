@@ -5,6 +5,8 @@ import zipfile
 import sys
 import os
 import yaml 
+import urllib
+
 
 # get configuration
 y                       = yaml.load( open( 'configuration.yaml' , 'r' ) , Loader=yaml.FullLoader )
