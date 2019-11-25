@@ -2,11 +2,15 @@
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 LOGFILE="$DIR/Kuiper-install.log"
+GUNICORN_IP="$(cat configuration.yaml | grep "Gunicorn:" -A 2 | grep "IP:" | awk '/IP:/{print $2}')"
+GUNICORN_PORT="$(cat configuration.yaml | grep "Gunicorn:" -A 2 | grep "PORT:" | awk '/PORT:/{print $2}')"
+
 
 usage="$(basename "$0") [options] -- Kuiper Anaylsis framework
 where:
     -install    installs all dependencies and requirements
     -run        run's Kuiper
+    -stop       stop kuiper processes (celery and gunicorn)
     -h          show this help message"
 
 echoerror() {
@@ -203,9 +207,16 @@ if [ "$1" == "-install" ]; then
 elif [ "$1" == "-run" ]; then
 
     echo "Running Kuiper!"
-    echo "Kuiper can be accessed at http://[configuredIP]:5000"
-    nohup python Kuiper.py >> "$DIR/Kuiper-flask.log" &
+    echo "Kuiper can be accessed at http://$GUNICORN_IP:$GUNICORN_PORT/"
+    nohup gunicorn --bind $GUNICORN_IP:$GUNICORN_PORT Kuiper:app -p gunicorn.pid --access-logfile ./Kuiper-access-gunicorn.log >> "$DIR/Kuiper-flask.log" &
     celery worker -A app.celery --loglevel=info --logfile="$DIR/Kuiper-celery.log" &
+
+
+# ************* Stopping Kuiper ****************
+elif [ "$1" == "-stop" ]; then
+    echo "Killing Gunicorn and Celery processes " 
+    killall gunicorn
+    killall celery
 
 else echo "$usage"
 

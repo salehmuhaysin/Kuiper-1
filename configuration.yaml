@@ -1,15 +1,23 @@
 
 
 # ============ Kuiper Platform
+# NOTE: Kuiper IP and PORT will not be used anymore since gunicorn will handle the requests, see and change Gunicorn section instead 
 Kuiper:
-  IP            : 0.0.0.0         # flask web application ip
-  PORT          : 5000            # flask web application port 
-  Debug         : True            # enable debugging mode
+  IP            : 0.0.0.0         # flask web application ip    # deprecated since gunicorn will handle the sessions 
+  PORT          : 5000            # flask web application port  # deprecated since gunicorn will handle the sessions 
+  Debug         : False           # enable debugging mode       # deprecated since gunicorn will handle the sessions 
   RemoveRawFiles: True            # remove raw files uploaded to Kuiper, as consequences enable this will allow upload the file multiple times
+
+# ============ Gunicorn configuration
+# gunicorn used to support multi-request connections at the same time, gunicorn will run Flask platform and handle requests to it
+Gunicorn:
+  IP:           0.0.0.0           # gunicorn LISTEN IP address
+  PORT:         8000              # gunicorn LISTEN PORT number
+
 
 # ============ AdminLTE
 adminlte:
-  SIDEBAR_OPEN: false
+  SIDEBAR_OPEN: False             # by default the left sidebar of platform closed
 
 
 # ============ configuration of celery
@@ -31,6 +39,10 @@ MongoDB:
   DB_PORT: 27017            # MongoDB Database Port number
 
 
+# ============ Git
+Git:
+  git_url_release : 'https://api.github.com/repos/salehmuhaysin/Kuiper-1/releases/latest'                                     # link for git to pull new updates if exists
+  k_version       : "v0.4.0"                                                                          # current version of kuiper
 
 
 # ============ configuration of directories on the platform
@@ -66,5 +78,8 @@ admin_sidebar:
     SubTitles : Null
   - Title:      ['Rules' , '/admin/rules' , 'fa fa-list-alt']
     SubTitles : Null
-  - Title:      ['Configuration' , '/admin/config' , 'fa fa-gears' ]
-    SubTitles : Null
+  - Title:      ['Settings' , '#' , 'fa fa-gears' ]
+    SubTitles : [
+          ['Configuration' , '/admin/config' , 'fa fa-gears'],
+          ['About' , '/admin/update' , 'fa fa-gears']
+      ]

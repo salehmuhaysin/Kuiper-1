@@ -18,14 +18,14 @@ from app.database.elkdb import *
 from app.database.dbstuff import *
 
 
-
 # get configuration
 y = yaml.load( open( 'configuration.yaml' , 'r' ) , Loader=yaml.FullLoader )
 
 
 SIDEBAR = {
-    "sidebar"   : y['admin_sidebar'],
-    "open"      : app.config['SIDEBAR_OPEN']
+    "sidebar"           : y['admin_sidebar'],
+    "open"              : app.config['SIDEBAR_OPEN'],
+    'current_version'   : y['Git']['k_version']
 }
 
 
@@ -58,6 +58,25 @@ def list_zip_file(zip_path):
         zip_content.append(z.filename)
     return zip_content
 
+
+# this function run commands `git`
+def git(*args):
+    return subprocess.check_call(['git'] + list(args))
+
+
+# update kuiper from git
+def GitUpdate():
+
+    try:
+        up_status = subprocess.Popen('python Kuiper-update.py' , shell=True ,stdout=subprocess.PIPE).communicate()[0]
+        print up_status
+        if up_status.split(":")[0] == 'True':
+            return [True , up_status.split(":")[1]]
+        else:
+            return [False , up_status.split(":")[1]]
+    except Exception as e :
+        return [False , str(e)]
+    
 
 
 # =================================================
@@ -153,8 +172,79 @@ def admin_delete_case(casename):
 
 # =================== Config =======================
 
+# =================== Kuiper Update =======================
 
 
+# return the status of update
+@app.route('/admin/update_check_progress')
+def update_check_progress():
+    STATUS = ["NO_UPDATE" , ""]
+    update_progress_file = "Kuiper-update.progress"
+    if os.path.exists(update_progress_file):
+        up          = open(update_progress_file , 'r')
+        stat        = up.read().strip().split(":")
+        stat_num    = int(stat[0])
+        msg         = stat[1]
+
+        up.close()
+
+        STATUS = ["NO_UPDATE" , msg]
+
+
+        if stat_num == 1:
+            STATUS[0] = "START_UPDATE"
+        elif stat_num == 2:
+            STATUS[0] = "BACKING_UP"
+        elif stat_num == 3:
+            STATUS[0] = "RETRIVE_INFO"
+        elif stat_num == 4:
+            STATUS[0] = "DOWNLOAD_RELEASE"
+        elif stat_num == 5:
+            STATUS[0] = "UPDATING"
+        elif stat_num == 6:
+            STATUS[0] = "RELEASE_INSTALLED"
+        elif stat_num == 7:
+            STATUS[0] = "ROLLBACK"
+        elif stat_num == 8:
+            STATUS[0] = "FAILED_W_ROLLBACK"
+        elif stat_num == 9:
+            STATUS[0] = "FAILED_WO_ROLLBACK"
+
+        if STATUS[0] in ["RELEASE_INSTALLED" , "FAILED_W_ROLLBACK" , "FAILED_WO_ROLLBACK"]:
+            os.remove(update_progress_file)
+
+    return json.dumps({'results' : 'true' , 'status':STATUS[0] , 'msg' : STATUS[1]})
+
+
+
+# show the main config page
+@app.route('/admin/update')
+def config_update():
+    
+    # Gittle repo
+    subprocess.Popen(["python", "Kuiper-update.py"]) 
+
+    return json.dumps({'results' : 'true' , 'msg' : 'done'})
+
+@app.route('/admin/check_update')
+def config_check_update():
+
+    
+    release_url = y['Git']['git_url_release']
+    print "Start getting latest release from Github: " + release_url
+    try:
+        request = urllib.urlopen(release_url)
+        response = request.read()
+        data = json.loads(response)
+        
+        if 200 == request.getcode():
+            return json.dumps({'results' : 'true' , 'msg' : data['tag_name']})
+        else:
+            return json.dumps({'results' : 'false' , 'msg' : 'Connection issue: ' + str(request.getcode()) + "<br />" + data['message']})
+    except Exception as e:
+        print 
+        return json.dumps({'results' : 'false' , 'msg' : "Network connection issue: <br />" + str(e)})
+    
 
 
 
@@ -346,5 +436,4 @@ def admin_rules():
         return render_template('admin/display_rules.html',SIDEBAR=SIDEBAR , all_rules=all_rules[1] , page_header="Rules")
     else:
         return render_template('admin/error_page.html',SIDEBAR=SIDEBAR , message=all_rules[1] , page_header="Cases")
-
 
