@@ -42,7 +42,7 @@ MongoDB:
 # ============ Git
 Git:
   git_url_release : 'https://api.github.com/repos/salehmuhaysin/Kuiper-1/releases/latest'                                     # link for git to pull new updates if exists
-  k_version       : "v0.4.1"                                                                          # current version of kuiper
+  k_version       : "v0.7.5"                                                                          # current version of kuiper
 
 
 # ============ configuration of directories on the platform
