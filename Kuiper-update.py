@@ -174,10 +174,10 @@ def Update(kuiper_update , release_url , kuiper_backup , backup_exclude_dirs , b
         # ============== Download and Update Kuiper 
         write_progress(4 , "Start downloading latest release")
         # open the downloaded zip file from github
-        urllib.urlretrieve(zip_url, "Kuiper-update.zip")
+        urllib.urlretrieve(zip_url, kuiper_update)
 
         write_progress(5 , "Start install updates")
-        zip_update = zipfile.ZipFile(StringIO(zip_response).read()) 
+        zip_update = zipfile.ZipFile(kuiper_update) 
         
         
         bUpdateSuccess = [True , "done"]
@@ -227,7 +227,7 @@ if up[0]:
     write_progress(10 , "Start install dependencies")
     
     # if update installed successfully, run Kuiper-install.sh to install the new dependencies
-    subprocess.call(['./kuiper_install.sh'])
+    subprocess.call(['./kuiper_install.sh' , '-install'])
 
     write_progress(6 , "New release installed")
 
