@@ -7,6 +7,20 @@ import os
 import yaml 
 import urllib
 import json
+import subprocess
+
+# ================ update progress messages
+# 1 , "Start update"
+# 2 , "Start backup"
+# 3 , "Getting latest release info."
+# 4 , "Start downloading latest release"
+# 5 , "Start install updates"
+# 10 , "Start install updates dependencies"
+# 6 , "New release installed"
+# 7 , "Start rollback to backup"
+# 8 , "Update failed rollback done - check logs"
+# 9 , "Update failed rollback failed - check logs"
+
 
 # get configuration
 y                       = yaml.load( open( 'configuration.yaml' , 'r' ) , Loader=yaml.FullLoader )
@@ -25,10 +39,9 @@ backup_dirs_exclude     = [
     ]
 backup_files_exclude    = [
     kuiper_backup,
-    kuiper_update_log_file,
-    'gunicorn.pid',
     'Kuiper-install.log',
     kuiper_update,
+    kuiper_update_log_file,
     update_progress
 ]
 
@@ -41,7 +54,7 @@ def write_progress( num , msg):
 
 
 
-update_progress(1 , "Start update")
+write_progress(1 , "Start update")
 
 # print the kuiper update logs
 def write_log(msg):
@@ -54,7 +67,7 @@ def write_log(msg):
 
 # rollback to the backup if updating failed
 def rollback(kuiper_backup, backup_exclude_dirs , backup_exclude_files):
-    update_progress(7 , "Start rollback to backup")
+    write_progress(7 , "Start rollback to backup")
 
     try:
         write_log("Kuiper update: Start Rollback")
@@ -119,7 +132,7 @@ def Update(kuiper_update , release_url , kuiper_backup , backup_exclude_dirs , b
     try:   
         
         # ====================== backup
-        update_progress(2 , "Start backup")
+        write_progress(2 , "Start backup")
 
         write_log( "Kuiper update: Start backup for kuiper " )
         # backup the current Kuiper files before updating it
@@ -144,7 +157,7 @@ def Update(kuiper_update , release_url , kuiper_backup , backup_exclude_dirs , b
         backup.close()
         
         # ===================== Get last release link 
-        update_progress(3 , "Getting latest release info.")
+        write_progress(3 , "Getting latest release info.")
 
         write_log("Kuiper update: getting latest release from GitHub ["+release_url+"] " )
         
@@ -159,11 +172,11 @@ def Update(kuiper_update , release_url , kuiper_backup , backup_exclude_dirs , b
         
 
         # ============== Download and Update Kuiper 
-        update_progress(4 , "Start downloading latest release")
+        write_progress(4 , "Start downloading latest release")
         # open the downloaded zip file from github
         urllib.urlretrieve(zip_url, "Kuiper-update.zip")
 
-        update_progress(5 , "Start install updates")
+        write_progress(5 , "Start install updates")
         zip_update = zipfile.ZipFile(StringIO(zip_response).read()) 
         
         
@@ -211,22 +224,27 @@ def Update(kuiper_update , release_url , kuiper_backup , backup_exclude_dirs , b
 # load the new update
 up = Update(kuiper_update , release_url , kuiper_backup, backup_dirs_exclude , backup_files_exclude)
 if up[0]:
-    update_progress(6 , "New release installed")
+    write_progress(10 , "Start install dependencies")
     
+    # if update installed successfully, run Kuiper-install.sh to install the new dependencies
+    subprocess.call(['./kuiper_install.sh'])
+
+    write_progress(6 , "New release installed")
+
 else:
     # if failed rollback to the old backup
     rb = rollback(kuiper_backup, backup_dirs_exclude , backup_files_exclude)
     if rb[0]:
         write_log("Kuiper update: rollback done")
-        update_progress(8 , "Update failed rollback done - check logs")
+        write_progress(8 , "Update failed rollback done - check logs")
         print "False:" + up[1] + " - rollback done"
     else:
         write_log("Kuiper update: rollback failed - " + rb[1])
-        update_progress(9 , "Update failed rollback failed - check logs")
+        write_progress(9 , "Update failed rollback failed - check logs")
         
 
 # close the logging 
 kuiper_update_log.close()
 
 # restart gunicorn worker
-#os.system("kill -HUP $(cat gunicorn.pid)")
+os.system("kill -HUP $(cat gunicorn.pid)")

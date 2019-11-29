@@ -64,19 +64,6 @@ def git(*args):
     return subprocess.check_call(['git'] + list(args))
 
 
-# update kuiper from git
-def GitUpdate():
-
-    try:
-        up_status = subprocess.Popen('python Kuiper-update.py' , shell=True ,stdout=subprocess.PIPE).communicate()[0]
-        print up_status
-        if up_status.split(":")[0] == 'True':
-            return [True , up_status.split(":")[1]]
-        else:
-            return [False , up_status.split(":")[1]]
-    except Exception as e :
-        return [False , str(e)]
-    
 
 
 # =================================================
@@ -203,6 +190,8 @@ def update_check_progress():
             STATUS[0] = "UPDATING"
         elif stat_num == 6:
             STATUS[0] = "RELEASE_INSTALLED"
+        elif stat_num == 10:
+            STATUS[0] = "INSTALL_DEPENDENCUES"
         elif stat_num == 7:
             STATUS[0] = "ROLLBACK"
         elif stat_num == 8:
