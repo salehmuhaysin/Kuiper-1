@@ -56,12 +56,31 @@ def write_progress( num , msg):
 
 write_progress(1 , "Start update")
 
+
 # print the kuiper update logs
 def write_log(msg):
     # be quiet and dont print the messages if -q enabled
     if '-q' not in sys.argv:
         print msg
     kuiper_update_log.write(msg + "\n")
+
+
+
+
+class download_progress():
+    def __init__(self):
+        self.downloaded_bytes = 0
+
+    def __call__(self, block_num, block_size, total_size):
+        self.downloaded_bytes += block_size
+
+	per = 100 * float(self.downloaded_bytes) / float(total_size)
+	write_progress(  )
+    write_progress(4 , "Start downloading latest release total size ("+str(total_size)+"Bytes) " + str( "{0:.2f}".format(per) ) + "%")
+	if self.downloaded_bytes == total_size:
+            print "Done"
+
+
 
 
 
@@ -174,7 +193,7 @@ def Update(kuiper_update , release_url , kuiper_backup , backup_exclude_dirs , b
         # ============== Download and Update Kuiper 
         write_progress(4 , "Start downloading latest release")
         # open the downloaded zip file from github
-        urllib.urlretrieve(zip_url, kuiper_update)
+        urllib.urlretrieve(zip_url, kuiper_update, reporthook=download_progress())
 
         write_progress(5 , "Start install updates")
         zip_update = zipfile.ZipFile(kuiper_update) 
@@ -236,11 +255,11 @@ else:
     rb = rollback(kuiper_backup, backup_dirs_exclude , backup_files_exclude)
     if rb[0]:
         write_log("Kuiper update: rollback done")
-        write_progress(8 , "Update failed rollback done - check logs")
-        print "False:" + up[1] + " - rollback done"
+        write_progress(8 , "Update failed, rollback done - check logs: " + up[1])
+        write_kog("False:" + up[1] + " - rollback done")
     else:
         write_log("Kuiper update: rollback failed - " + rb[1])
-        write_progress(9 , "Update failed rollback failed - check logs")
+        write_progress(9 , "Update failed rollback failed - check logs: " + rb[1])
         
 
 # close the logging 
