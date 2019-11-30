@@ -75,7 +75,6 @@ class download_progress():
         self.downloaded_bytes += block_size
 
 	per = 100 * float(self.downloaded_bytes) / float(total_size)
-	write_progress(  )
     write_progress(4 , "Start downloading latest release total size ("+str(total_size)+"Bytes) " + str( "{0:.2f}".format(per) ) + "%")
 	if self.downloaded_bytes == total_size:
             print "Done"
