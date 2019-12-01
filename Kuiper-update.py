@@ -54,8 +54,25 @@ def write_progress( num , msg):
 
 
 
-write_progress(1 , "Start update")
+def DownloadProgress(count, block_size, total_size):
+    global start_time
+    if count == 0:
+        start_time = time.time()
+        return
+    duration = time.time() - start_time
+    progress_size = int(count * block_size)
+    speed = int(progress_size / (1024 * duration))
+    percent = int(count * block_size * 100 / total_size)
+    sys.stdout.write("\r...%d%%, %d MB, %d KB/s, %d seconds passed" %
+                    (percent, progress_size / (1024 * 1024), speed, duration))
+    
+    write_progress(4 , "Start downloading: %d%%, %d MB, %d KB/s, %d seconds passed" % (percent, progress_size / (1024 * 1024), speed, duration) )
+    
 
+
+
+
+write_progress(1 , "Start update")
 
 # print the kuiper update logs
 def write_log(msg):
@@ -63,23 +80,6 @@ def write_log(msg):
     if '-q' not in sys.argv:
         print msg
     kuiper_update_log.write(msg + "\n")
-
-
-
-
-class download_progress():
-    def __init__(self):
-        self.downloaded_bytes = 0
-
-    def __call__(self, block_num, block_size, total_size):
-        self.downloaded_bytes += block_size
-
-        per = 100 * float(self.downloaded_bytes) / float(total_size)
-        write_progress(4 , "Start downloading latest release total size ("+str(total_size)+"Bytes) " + str( "{0:.2f}".format(per) ) + "%")
-        if self.downloaded_bytes == total_size:
-                print "Done"
-
-
 
 
 
@@ -192,7 +192,9 @@ def Update(kuiper_update , release_url , kuiper_backup , backup_exclude_dirs , b
         # ============== Download and Update Kuiper 
         write_progress(4 , "Start downloading latest release")
         # open the downloaded zip file from github
-        urllib.urlretrieve(zip_url, kuiper_update, reporthook=download_progress())
+        urllib.urlretrieve(zip_url, kuiper_update , DownloadProgress() )
+        
+
 
         write_progress(5 , "Start install updates")
         zip_update = zipfile.ZipFile(kuiper_update) 
@@ -245,7 +247,7 @@ if up[0]:
     write_progress(10 , "Start install dependencies")
     
     # if update installed successfully, run Kuiper-install.sh to install the new dependencies
-    subprocess.call(['./kuiper_install.sh' , '-install'])
+    subprocess.call(['./kuiper_install.sh'])
 
     write_progress(6 , "New release installed")
 
@@ -254,11 +256,11 @@ else:
     rb = rollback(kuiper_backup, backup_dirs_exclude , backup_files_exclude)
     if rb[0]:
         write_log("Kuiper update: rollback done")
-        write_progress(8 , "Update failed, rollback done - check logs: " + up[1])
-        write_kog("False:" + up[1] + " - rollback done")
+        write_progress(8 , "Update failed rollback done - check logs")
+        print "False:" + up[1] + " - rollback done"
     else:
         write_log("Kuiper update: rollback failed - " + rb[1])
-        write_progress(9 , "Update failed rollback failed - check logs: " + rb[1])
+        write_progress(9 , "Update failed rollback failed - check logs")
         
 
 # close the logging 
