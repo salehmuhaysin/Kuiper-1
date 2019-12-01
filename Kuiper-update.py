@@ -192,7 +192,7 @@ def Update(kuiper_update , release_url , kuiper_backup , backup_exclude_dirs , b
         # ============== Download and Update Kuiper 
         write_progress(4 , "Start downloading latest release")
         # open the downloaded zip file from github
-        urllib.urlretrieve(zip_url, kuiper_update , DownloadProgress() )
+        urllib.urlretrieve(zip_url, kuiper_update , DownloadProgress )
         
 
 
