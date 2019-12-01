@@ -8,6 +8,7 @@ import yaml
 import urllib
 import json
 import subprocess
+import time
 
 # ================ update progress messages
 # 1 , "Start update"
